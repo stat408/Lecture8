@@ -1,5 +1,5 @@
 ---
-title: "Week 8: Merging, Maps, and More"
+title: "R Shiny"
 output:
   revealjs::revealjs_presentation:
     theme: white
@@ -9,440 +9,116 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-library(knitr)
-library(dplyr)
-library(readr)
-library(forcats)
-library(ggplot2)
-library(tidyr)
-library(stringr)
+knitr::opts_chunk$set(echo = TRUE)
 ```
+## Overview of R Shiny 
 
-# Factors
+R Shiny provides a way to create interactive visualizations and web applets
 
-## Factors...
-Factors are a specific way to store categorical data. Usign factors results in a more efficient data storage process, but can be cumbersome.
+There are two key components of an R Shiny Script:
 
-Factors can be necessary for making plots and fitting models in R.
+1. The ui (user interface) provides a way for the user to interactive with the visualization and for the program to capture input values.
+2. The server piece takes those outputs and applies them to R code.
 
-## Character Values
+# Server Code
 
-```{r}
-favorite_day <- c('Friday', 'Saturday', 'Sunday')
-class(favorite_day)
-sort(favorite_day)
-```
-
-## Creating Factors
-
-```{r}
-favorite_day <- c('Friday', 'Saturday', 'Sunday', 'Monday')
-sort(favorite_day)
-day_factor <- as.factor(favorite_day)
-class(day_factor)
-sort(day_factor)
-```
-
-## Creating Factors
-Rather than coercing a class variable to be a factor, the factor can be created directly.
-```{r}
-day_factor2 <- factor(c('Friday', 'Saturday', 'Sunday', 'Monday'), 
-levels = c('Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'))
-sort(day_factor2)
+## Under the hood: Server Code
+```{r, eval=F,mysize=TRUE,size = '\\footnotesize'}
+# Define server logic required to draw a histogram
+server <- function(input, output) {
+  
+  output$distPlot <- renderPlot({
+    # generate bins based on input$bins from ui.R
+    x    <- faithful[, 2] 
+    bins <- seq(min(x), max(x), length.out = input$bins + 1)
+    
+    # draw the histogram with the specified number of bins
+    hist(x, breaks = bins, col = 'darkgray', border = 'white')
+  })
+}
 ```
 
 
-# Sort / Order / Arrange
-
-## Sort
-We have seen the sort command, this returns a sorted result.
-```{r}
-ski_acres <- data.frame( ski.hill = c('Big Sky','Bridger Bowl', 'Jackson', 'Steamboat' ), 
-                        skiable.acres = c(5800,2000, "2500+",2965))
-kable(ski_acres)
-```
-
-## Exercise: 
-
-### Q1. 
-What type of variable is `skiable.acres` in the `ski_acres`
-data frame?
-
-### Q2.
-Sort the ski resorts by skiable acres in descending fashion.
-
-
-## Solution: 
-
-### Q1. 
-What type of variable is `skiable.acres` in the `ski_acres`
-data frame?
-```{r}
-class(ski_acres$skiable.acres)
-```
-
-## Solution: 
-
-
-### Q2.
-Sort the ski resorts by skiable acres in descending fashion.
-```{r}
-ski_acres %>% arrange(desc(skiable.acres))
-```
-
-## arrange
-
-Arrange is one of the verb words in the `dplyr()` package and can be very useful for arranging data frames.
-
-## sort/order
-
-Otherwise, the `sort` and `order` functions, in base R, can be used.
-
-```{r}
-order(ski_acres$skiable.acres)
-ski_acres[order(ski_acres$skiable.acres, decreasing = T),]
-```
-
-## categorical variables and factors
-
-We have already seen sorting on factor variables, what about plain categorical variables?
-
-```{r}
-sort(favorite_day)
-
-string_vals <- c('1','10','2','3')
-
-sort(string_vals)
+## Under the hood: Server Code - This is just R Code
+```{r,eval=F,mysize=TRUE,size = '\\footnotesize'}
+    input.bins <- 30 # number of bins
+    x   <- faithful[, 2] 
+    bins <- seq(min(x), max(x), length.out = input.bins + 1)
+      # draw the histogram with the specified number of bins
+    hist(x, breaks = bins, col = 'darkgray', border = 'white')
 ```
 
 
-# Merge / Join
-
-## Merge
-Another important skill is merging or combining data sets.
-
-Consider the two data frames, how can we merge them and what should be the dimensions of the merged data frame.
-```{r, echo = FALSE}
-df1 <- data.frame(school = c('MSU','VT','Mines'),
-            state= c('MT','VA','CO'), stringsAsFactors = F)
-kable(df1)
-df2 <- data.frame(school = c('Mines','MSU','VT'),
-            enrollment = c(5794,15688,30598), stringsAsFactors = F)
-kable(df2)
-```
-
-## pre-sort
-One possibility is to use the arrange the data frames first.
-
-```{r}
-df1 <- df1[order(df1$school),]
-df2 <- df2[order(df2$school),]
-```
-
-## pre-sort
-One possibility is to use the arrange the data frames first.
-
-```{r}
-df1 
-df2 
+## Under the hood: Server Code
+```{r, mysize=TRUE, eval=T, size='\\tiny',fig.align='center', echo = F}
+    input.bins <- 30 # number of bins
+    x   <- faithful[, 2] 
+    bins <- seq(min(x), max(x), length.out = input.bins + 1)
+      # draw the histogram with the specified number of bins
+    hist(x, breaks = bins, col = 'darkgray', border = 'white')
 ```
 
 
-## rbind() and cbind()
-
-Now, given that the data frames are both sorted the same way, we can bind the rows together.
-
-```{r}
-comb_df <- cbind(df1,df2)
-comb_df
-comb_df <- comb_df[,-3]
+## Under the hood: Server Code -  Change # of Bins
+```{r, mysize=TRUE, eval=T, size='\\tiny',fig.align='center', echo = F}
+    input.bins <- 15 # number of bins
+    x   <- faithful[, 2] 
+    bins <- seq(min(x), max(x), length.out = input.bins + 1)
+      # draw the histogram with the specified number of bins
+    hist(x, breaks = bins, col = 'darkgray', border = 'white')
 ```
 
-## rbind() and cbind()
-Now assume we want to add another school to the data frame.
+# UI Code
 
-```{r, error=TRUE}
-new.school <- c('Luther', 'IA',2337)
-rbind(comb_df, new.school)
-```
-Note: if your strings are saved as factors, this chunk of code will give you an error.
-
-## bind_rows() / bind_cols()
-
-`dplyr` also contains functions for binding rows and columns.
-
-## Exercise
-
-Now combine the following information into a single table sorted alphabetically by the name of the ski hill.
-```{r, echo = F}
-ski_acres
-df_cost <- data.frame( ski.resort = c('Bridger Bowl', 'Big Sky', 'Steamboat', 'Jackson'), 
-                       ticket.cost = c(60, 'depends',145, 130))
-df_cost
-disco <- c('Discovery', 2200, 20); disco
-```
-
-## Solution part 1
-
-Now combine the following information into a single table sorted alphabetically by the name of the ski hill.
-```{r, echo = F}
-ski_acres
-df_cost <- df_cost %>% arrange(ski.resort)
-df_comb <- ski_acres %>% bind_cols(df_cost) %>% select(-ski.resort)
-str(df_comb)
+## Under the Hood: UI Code
+```{r,eval=F, mysize=TRUE, eval=F, size='\\footnotesize'}
+# Define UI for application that draws a histogram
+ui <- fluidPage(
+   # Application title
+   titlePanel("Old Faithful Geyser Data"),
+   # Sidebar with a slider input for number of bins 
+   sidebarLayout(
+      sidebarPanel(
+         sliderInput("bins", 
+                     "Number of bins:",
+                     min = 1,
+                     max = 50,
+                     value = 30)
+      ),
+      # Show a plot of the generated distribution
+      mainPanel(
+         plotOutput("distPlot")
+      )
+   )
+)
 ```
 
-## Solution part 2
+## Shiny Code: Running the Application
+```{r,eval=F, mysize=TRUE, eval=F, size='\\footnotesize'}
+# Define server logic required to draw a histogram
+server <- function(input, output) {
+   
+   output$distPlot <- renderPlot({
+      # generate bins based on input$bins from ui.R
+      x    <- faithful[, 2] 
+      bins <- seq(min(x), max(x), length.out = input$bins + 1)
+      
+      # draw the histogram with the specified number of bins
+      hist(x, breaks = bins, col = 'darkgray', border = 'white')
+   })
+}
 
-```{r}
-df_comb <- df_comb %>% mutate(ski.hill = as.character(ski.hill),
-                              skiable.acres = as.character(skiable.acres),
-                              ticket.cost = as.character(ticket.cost))
-str(df_comb)
+# Run the application 
+shinyApp(ui = ui, server = server)
 ```
 
-## Solution part 3
+## Shiny Output
+![Snapshot of Shiny applet](Shiny.png)
 
-```{r}
-df_comb <- df_comb %>% rbind(disco) %>% arrange(ski.hill)
-df_comb
-```
+## Shiny Web Applet
 
-## join()
-We could have also used some of the more advanced merge (join) features from dplyr.
+- see demo in video
 
-```{r}
-new.df <- full_join(df1,df2, by='school')
-new.df
-```
+## Shiny in RMarkdown HTML file
 
-## more about join
-
-The dplyr join command includes the following options:
-
-- left join
-- right join
-- inner join
-- full join
-- anti join
-
-## Exercise
-
-Combine the two data sets
-```{r,echo = F}
-ski_acres
-df_cost
-disco_df <- tibble(ski.hill = 'Discovery', skiable.acres = '2200', ticket.cost = '20'); disco_df
-```
-
-## Solution
-
-```{r}
-full_join(ski_acres, df_cost, by = c("ski.hill"= "ski.resort")) %>%
-  mutate(ski.hill = as.character(ski.hill),
-  skiable.acres = as.character(skiable.acres),
-  ticket.cost = as.character(ticket.cost)) %>% 
-  full_join(disco_df) %>%
-  arrange(ski.hill)
-```
-
-
-# wide / long data
-
-## Hoops Data
-
-This is a _wide_ dataset
-
-```{r, message = F}
-hoops <- read_csv('http://www.math.montana.edu/ahoegh/teaching/stat408/datasets/TourneyDetailedResults.csv')
-head(hoops)
-```
-
-## Plot Creation
-Consider a plot where the number of points is colored or faceted by winning or losing. 
-
-This requires a dataset that  is _thin_ and looks something like
-
-|      Game Id     | Points |win/lose | 
-|:----------------:|-------|:---------:|
-| 1 | 92   | win       |
-| 1   | 84   | lose       |
-| 2  | 80   | win       |
-| 2 | 51    | lose      |
-
-## Data Wrangling
-
-```{r}
-lose_score <- hoops %>% select(score = Lscore) %>% 
-  mutate(outcome = 'lose', game_id = row_number()) 
-win_score <- hoops %>% select(score = Wscore) %>% 
-  mutate(outcome = 'win', game_id = row_number())
-thin_scores <- bind_rows(win_score, lose_score) %>% 
-  arrange(game_id)
-thin_scores
-```
-
-
-## Plot Creation
-
-```{r, echo = F, message = F}
-thin_scores %>% ggplot(aes(x = score)) + geom_histogram() + facet_wrap(.~outcome) +
-  ggtitle('Points scored in NCAA games for Winning and Losing Teams')
-```
-
-## tidyr package
-
-The `tidyr` package contains additional tools for converting files from long to wide formats.
-
-Consider the `billboard` dataset which contains the rank of the song (in 2000) for each week after it first entered the list.
-
-```{r}
-billboard
-```
-
-## billboard data
-
-If we want to identify songs that reach number 1 quickly, the data needs to manipulated.
-```{r}
-billboard %>% 
-  select(artist, track, date.entered, wk1, wk2) %>%
-  pivot_longer(
-  cols= c('wk1', 'wk2'),
-  names_to = 'week',
-  values_to = 'rank',
-  values_drop_na = T)
-```
-
-## Billboard Data Analysis
-
-```{r}
-billboard %>% 
-  pivot_longer(
-  cols= starts_with('wk'),
-  names_to = 'week',
-  values_to = 'rank',
-  values_drop_na = T) %>%
-  mutate(week_numb= as.numeric(str_replace(week, 'wk',''))) %>%
-  filter(rank == 1) %>%
-  arrange(week_numb) %>% 
-  slice(1) %>%
-  kable()
-```
-
-## Exercise
-
-Determine which song in this dataset spent the most time at #1
-
-## Solution
-
-```{r}
-billboard %>% 
-  pivot_longer(
-  cols= starts_with('wk'),
-  names_to = 'week',
-  values_to = 'rank',
-  values_drop_na = T) %>%
-  mutate(week_numb= as.numeric(str_replace(week, 'wk',''))) %>%
-  filter(rank == 1) %>%
-  group_by(track) %>% 
-  tally() %>%
-  arrange(desc(n)) %>%
-  kable()
-```
-
-
-## pivot_wider()
-
-The `pivot_wider()` function allows transformation in the other direction from thin to wide.
-
-# Maps in R
-
-## ggplot functionality
-```{r}
-mt_counties <- map_data("county", "montana") %>% 
-  select(lon = long, lat, group, id = subregion)
-class(mt_counties)
-mt_counties
-```
-
-## Montana Maps
-```{r}
-mt <- ggplot(mt_counties, aes(lon, lat, group = group)) +
-  geom_polygon(fill = "white", colour = "grey50") + 
-  coord_quickmap() 
-mt
-```
-
-
-## Montana Maps
-```{r}
-mt + annotate('text',label = 'good guys', x = -111, y = 45.67, col = "darkblue") + 
-  annotate('point', x = -111, y = 46, col = "darkblue") +
-  annotate('text',label = 'bad guys', x = -114, y = 47, col = "darkred") + 
-  annotate('point', x = -114, y = 46.8, col = "darkred")
-
-```
-
-## ggmap
-
-The ggmap package contains nice tools for creating maps; however, it requries creating a google api to fetch the maps.  
-[https://github.com/dkahle/ggmap](https://github.com/dkahle/ggmap)
-
-## leaflet
-Leaflet is another good option [https://rstudio.github.io/leaflet/](https://rstudio.github.io/leaflet/), however, it does not work well with this html slide conversion.
-
-```{r, echo = F, message = F}
-library(leaflet)
-seattle_in <- read_csv('http://math.montana.edu/ahoegh/teaching/stat408/datasets/SeattleHousing.csv')
-seattle_sort <- seattle_in %>% arrange(price)
-m <- leaflet() %>% setView(lng = -122.3, lat = 47.6, zoom = 9)
-m  %>% addTiles() %>% addMarkers(lng=seattle_sort$long[c(1, nrow(seattle_sort))], lat=seattle_sort$lat[c(1,nrow(seattle_sort))], popup=c("Cheapest House: 80K ", "Most Expensive House: 7.7 million"))
-```
-
-## tmap
-
-tmap also uses the grammar of graphics (gg) principles. [https://cran.r-project.org/web/packages/tmap/vignettes/tmap-getstarted.html](https://cran.r-project.org/web/packages/tmap/vignettes/tmap-getstarted.html)
-```{r}
-library(tmap)
-library(tmap)
-data("World")
-World
-
-```
-
-## tmap
-```{r}
-tm_shape(World) +
-    tm_polygons("life_exp") 
-```
-
-# gg add on packages
-
-## more gg packages
-
-Another of my favorite packages is the ggforce package: [https://github.com/thomasp85/ggforce](https://github.com/thomasp85/ggforce) [https://www.r-bloggers.com/the-ggforce-awakens-again/](https://www.r-bloggers.com/the-ggforce-awakens-again/)
-
-Here is a link to other gg add ons [http://www.ggplot2-exts.org/gallery/](http://www.ggplot2-exts.org/gallery/)
-
-## Exercise
-
-Using either the Seattle Housing dataset or the billboard data, explore the packages above.
-
-## Solution
-```{r, echo = F}
-library(ggforce)
-billboard_thin <- billboard %>% 
-  pivot_longer(
-  cols= starts_with('wk'),
-  names_to = 'week',
-  values_to = 'rank',
-  values_drop_na = T) %>%
-  mutate(week_numb= as.numeric(str_replace(week, 'wk',''))) %>% mutate(date.of.rank = date.entered + (7 * (week_numb - 1)))
-
-nsync <- billboard_thin %>% filter(artist == "N'Sync")
-
-library(ggthemes)
-billboard_thin %>% 
-ggplot( aes(y = rank, x = date.of.rank, group = track)) + geom_line(alpha = .1) + theme(axis.text.x = element_blank()) + ggtitle('Billboard Song Rankings \n by Week (2000)') + theme_bw() + geom_line(aes(y = rank, x = date.of.rank, group = track, color = track), inherit.aes = F, data = nsync) + theme_wsj()
-```
-
+- see demo in video
